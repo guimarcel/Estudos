@@ -4,7 +4,6 @@ import { Button } from '@material-ui/core'
 import Paper from '@material-ui/core/Paper'
 import { TextField } from '@material-ui/core'
 import { useRouter } from 'next/router'
-import "../styles/global.scss"
 
 
 function Login() {
