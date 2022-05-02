@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import Grid from '@material-ui/core/Grid'
-import { Button } from '@material-ui/core'
-import Paper from '@material-ui/core/Paper'
-import { TextField } from '@material-ui/core'
+import Grid from '@mui/material/Grid'
+import Button from '@mui/material/Button'
+import Paper from '@mui/material/Paper'
+import { TextField } from '@mui/material'
 import { useRouter } from 'next/router'
 
 
