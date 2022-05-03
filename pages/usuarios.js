@@ -1,8 +1,8 @@
-import UsersView from '../components/users.js'
+import UsersView from '../components/users/users.js'
 
 
 
-export default function Login() {
+export default function Users() {
 
     return (
         <div>
