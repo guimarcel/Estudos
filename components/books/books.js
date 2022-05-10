@@ -14,8 +14,9 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import DeleteIcon from '@mui/icons-material/Delete'
-import InfoIcon from '@mui/icons-material/Info'
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import EditIcon from '@mui/icons-material/Edit'
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks'
 
 
 function Books() {
@@ -23,12 +24,33 @@ function Books() {
     const [title, setTitle] = useState('')
     const [message, setMessage] = useState('')
     const [books, setBooks] = useState([])
+    const [users, setUsers] = useState([])
 
     useEffect(() => {
+        getUsers()
         getBooks()
     }, [])
 
     const router = useRouter()
+
+    const getUsers = () => {
+        //call api getusers
+        const result = [
+            {
+                user_id: 1,
+                user_name: "joaozin",
+                user_doc: 12345678912,
+                rented_books: [
+                    { id: 1, name: "Senhor do Aneis" },
+                    { id: 2, name: "Harry poter e o calice de fogo" }
+                ],
+                created_at: "2022-04-04 19:00:00",
+                updated_at: "2022-04-04 19:00:00",
+                deleted_at: null
+            }
+        ]
+        setUsers(result)
+    }
 
     const getBooks = () => {
         //call api getbooks
@@ -36,7 +58,7 @@ function Books() {
             {
                 book_id: 1,
                 book_name: "Senhor do Aneis",
-                is_rented: 1,
+                is_rented: 0,
                 created_at: "2022-04-04 19:00:00",
                 updated_at: "2022-04-04 19:00:00",
                 deleted_at: null
@@ -46,15 +68,14 @@ function Books() {
     }
 
     const getTableContent = () => {
-        console.log("teste", books)
         return books.map(book => (
             <TableRow key={book.id}>
                 <TableCell align="center">{book.book_id}</TableCell>
                 <TableCell align="center">{book.book_name}</TableCell>
                 <TableCell align="center">{book.is_rented ? 'Indisponivel' : 'Disponivel'}</TableCell>
                 <TableCell align="center">
-                    <Fab style={{ marginLeft: '5px' }} disabled={book.is_rented} color="primary" size="small" onClick={() => setOpen(true)}>
-                        <InfoIcon />
+                    <Fab style={{ marginLeft: '5px' }} disabled={book.is_rented} color="primary" size="small" onClick={() => callListUsers(book)}>
+                        <PersonAddAltIcon />
                     </Fab>
                     <Fab style={{ marginLeft: '5px', backgroundColor: 'green' }} size="small" onClick={() => callFormPage(book)}>
                         <EditIcon style={{ color: 'white' }} />
@@ -65,6 +86,52 @@ function Books() {
                 </TableCell>
             </TableRow>
         ))
+    }
+
+    const callListUsers = book => {
+        const listUsers = (
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell align="center">Nome</TableCell>
+                        <TableCell align="center">Acoes</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {users.map(user => (
+                        <TableRow>
+                            <TableCell align="center">{user.user_name}</TableCell>
+                            <TableCell align="center">
+                                <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => rentBook(book.book_id, user.user_id)}>
+                                    <LibraryBooksIcon />
+                                </Fab>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        )
+        setTitle('Selecione um usario para alugar o livro:')
+        setMessage(listUsers)
+        setOpen(true)
+    }
+
+    const rentBook = (book_id, user_id) => {
+        const body = {
+            book_id,
+            user_id
+        }
+
+        //call api alugar livro passando o id do livro e user id
+        const result = {
+            success: true
+        }
+        if (result.success) {
+            getBooks()
+            setTitle('Atencao:')
+            setMessage('Livro alugado com sucesso.')
+            setOpen(true)
+        }
     }
 
     const callDeleteBook = book => {
