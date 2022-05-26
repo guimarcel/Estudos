@@ -33,45 +33,36 @@ function Books() {
 
     const router = useRouter()
 
-    const getUsers = () => {
-        //call api getusers
-        const result = [
-            {
-                user_id: 1,
-                user_name: "joaozin",
-                user_doc: 12345678912,
-                rented_books: [
-                    { id: 1, name: "Senhor do Aneis" },
-                    { id: 2, name: "Harry poter e o calice de fogo" }
-                ],
-                created_at: "2022-04-04 19:00:00",
-                updated_at: "2022-04-04 19:00:00",
-                deleted_at: null
+    const getUsers = async () => {
+        const url = "http://localhost:8000/users"
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
             }
-        ]
-        setUsers(result)
+        })
+        const resp = await response.json()
+        setUsers(resp)
     }
 
-    const getBooks = () => {
-        //call api getbooks
-        const result = [
-            {
-                book_id: 1,
-                book_name: "Senhor do Aneis",
-                is_rented: 0,
-                created_at: "2022-04-04 19:00:00",
-                updated_at: "2022-04-04 19:00:00",
-                deleted_at: null
+    const getBooks = async () => {
+        const url = "http://localhost:8000/books"
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
             }
-        ]
-        setBooks(result)
+        })
+        const resp = await response.json()
+        setBooks(resp)
     }
 
     const getTableContent = () => {
         return books.map(book => (
-            <TableRow key={book.id}>
-                <TableCell align="center">{book.book_id}</TableCell>
-                <TableCell align="center">{book.book_name}</TableCell>
+            <TableRow key={book._id}>
+                <TableCell align="center">{book.name}</TableCell>
                 <TableCell align="center">{book.is_rented ? 'Indisponivel' : 'Disponivel'}</TableCell>
                 <TableCell align="center">
                     <Fab style={{ marginLeft: '5px' }} disabled={book.is_rented} color="primary" size="small" onClick={() => callListUsers(book)}>
@@ -100,9 +91,9 @@ function Books() {
                 <TableBody>
                     {users.map(user => (
                         <TableRow>
-                            <TableCell align="center">{user.user_name}</TableCell>
+                            <TableCell align="center">{user.name}</TableCell>
                             <TableCell align="center">
-                                <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => rentBook(book.book_id, user.user_id)}>
+                                <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => rentBook(book, user)}>
                                     <LibraryBooksIcon />
                                 </Fab>
                             </TableCell>
@@ -116,17 +107,41 @@ function Books() {
         setOpen(true)
     }
 
-    const rentBook = (book_id, user_id) => {
-        const body = {
-            book_id,
-            user_id
+    const rentBook = async (book, user) => {
+        const urlBook = "http://localhost:8000/books/create-update"
+        const bodyBook = {
+            _id: book._id,
+            name: book.name,
+            is_rented: true
         }
+        const responseBook = await fetch(urlBook, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bodyBook)
+        })
+        const respBook = await responseBook.json()
 
-        //call api alugar livro passando o id do livro e user id
-        const result = {
-            success: true
+        const urlUser = "http://localhost:8000/users/create-update"
+        const bodyUser = {
+            _id: user._id,
+            name: user.name,
+            doc: user.doc,
+            rented_books: [...user.rented_books, book]
         }
-        if (result.success) {
+        const responseUser = await fetch(urlUser, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bodyUser)
+        })
+        const respUser = await responseUser.json()
+
+        if (respUser && respBook) {
             getBooks()
             setTitle('Atencao:')
             setMessage('Livro alugado com sucesso.')
@@ -134,19 +149,27 @@ function Books() {
         }
     }
 
-    const callDeleteBook = book => {
-        const book_id = _.get(book, 'book_id', '')
+    const callDeleteBook = async book => {
+        const book_id = _.get(book, '_id', '')
 
-        //call api delete book passando o id do livro deletado
-        const result = {
-            success: true
+        const url = "http://localhost:8000/books/delete"
+        const body = {
+            _id: book_id
         }
-        if (result.success) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        })
+        const resp = await response.json()
+        if (resp) {
             getBooks()
             setTitle('Atencao:')
             setMessage('Livro deletado com sucesso.')
             setOpen(true)
-
         }
     }
 
@@ -154,25 +177,30 @@ function Books() {
         router.push({
             pathname: '/formulario-livro',
             query: {
-                book_id: _.get(book, 'book_id', ''),
-                book_name: _.get(book, 'book_name', '')
+                book_id: _.get(book, '_id', ''),
+                book_name: _.get(book, 'name', '')
             }
         })
     }
 
     return (
         <Grid container spacing={2}>
+            <Grid item xs={12} style={{ justifyContent: 'right', display: 'flex' }}>
+
+            </Grid>
             <Grid item xs={12} style={{ justifyContent: 'center', display: 'flex' }}>
                 <h1 class="display-4">Livros</h1>
             </Grid>
-            <Grid item xs={12} style={{ justifyContent: 'left', display: 'flex' }}>
+            <Grid item xs={12} style={{ justifyContent: 'space-between', display: 'flex' }}>
                 <Button variant='contained' color='primary' onClick={() => callFormPage()} style={{ marginLeft: '10px' }}>Criar novo</Button>
+                <Button variant='contained' color="primary" onClick={() => router.push("/usuarios")} style={{ marginRight: '10px' }}>
+                    Usuarios
+                </Button>
             </Grid>
             <Grid item xs={12} style={{ justifyContent: 'left', display: 'flex' }}>
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell align="center">ID</TableCell>
                             <TableCell align="center">Nome</TableCell>
                             <TableCell align="center">Disponibilidade</TableCell>
                             <TableCell align="center">Acoes</TableCell>

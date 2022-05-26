@@ -31,31 +31,24 @@ function Users() {
 
     const router = useRouter()
 
-    const getUsers = () => {
-        //call api getusers
-        const result = [
-            {
-                user_id: 1,
-                user_name: "joaozin",
-                user_doc: 12345678912,
-                rented_books: [
-                    { id: 1, name: "Senhor do Aneis" },
-                    { id: 2, name: "Harry poter e o calice de fogo" }
-                ],
-                created_at: "2022-04-04 19:00:00",
-                updated_at: "2022-04-04 19:00:00",
-                deleted_at: null
+    const getUsers = async () => {
+        const url = "http://localhost:8000/users"
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
             }
-        ]
-        setUsers(result)
+        })
+        const resp = await response.json()
+        setUsers(resp)
     }
 
     const getTableContent = () => {
         return users.map(user => (
             <TableRow key={user.id}>
-                <TableCell align="center">{user.user_id}</TableCell>
-                <TableCell align="center">{user.user_name}</TableCell>
-                <TableCell align="center">{user.user_doc}</TableCell>
+                <TableCell align="center">{user.name}</TableCell>
+                <TableCell align="center">{user.doc}</TableCell>
                 <TableCell align="center">
                     <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => callListBooks(user)}>
                         <InfoIcon />
@@ -86,7 +79,7 @@ function Users() {
                         <TableRow>
                             <TableCell align="center">{book.name}</TableCell>
                             <TableCell align="center">
-                                <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => returnRentedBook(book)}>
+                                <Fab style={{ marginLeft: '5px' }} color="primary" size="small" onClick={() => returnRentedBook(book, user)}>
                                     <LibraryBooksIcon />
                                 </Fab>
                             </TableCell>
@@ -100,14 +93,43 @@ function Users() {
         setOpen(true)
     }
 
-    const returnRentedBook = book => {
-        const book_id = _.get(book, 'id', '')
-
-        //call api devolver livro passando o id do livro
-        const result = {
-            success: true
+    const returnRentedBook = async (book, user) => {
+        const urlBook = "http://localhost:8000/books/create-update"
+        const bodyBook = {
+            _id: book._id,
+            name: book.name,
+            is_rented: false
         }
-        if (result.success) {
+        const responseBook = await fetch(urlBook, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bodyBook)
+        })
+        const respBook = await responseBook.json()
+
+        const urlUser = "http://localhost:8000/users/create-update"
+        _.remove(user.rented_books, userBook => book._id == userBook._id)
+        const bodyUser = {
+            _id: user._id,
+            name: user.name,
+            doc: user.doc,
+            rented_books: user.rented_books
+        }
+
+        const responseUser = await fetch(urlUser, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bodyUser)
+        })
+        const respUser = await responseUser.json()
+
+        if (respUser && respBook) {
             getUsers()
             setTitle('Atencao:')
             setMessage('Livro devolvido com sucesso.')
@@ -115,14 +137,23 @@ function Users() {
         }
     }
 
-    const callDeleteUser = user => {
-        const user_id = _.get(user, 'user_id', '')
+    const callDeleteUser = async user => {
+        const user_id = _.get(user, '_id', '')
 
-        //call api delete user passando o id do usuario deletado
-        const result = {
-            success: true
+        const url = "http://localhost:8000/users/delete"
+        const body = {
+            _id: user_id
         }
-        if (result.success) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        })
+        const resp = await response.json()
+        if (resp) {
             getUsers()
             setTitle('Atencao:')
             setMessage('Usuario deletado com sucesso.')
@@ -135,9 +166,9 @@ function Users() {
         router.push({
             pathname: '/formulario-usuario',
             query: {
-                user_id: _.get(user, 'user_id', ''),
-                user_name: _.get(user, 'user_name', ''),
-                user_doc: _.get(user, 'user_doc', '')
+                user_id: _.get(user, '_id', ''),
+                user_name: _.get(user, 'name', ''),
+                user_doc: _.get(user, 'doc', '')
             }
         })
     }
@@ -147,14 +178,14 @@ function Users() {
             <Grid item xs={12} style={{ justifyContent: 'center', display: 'flex' }}>
                 <h1 class="display-4">Usuarios</h1>
             </Grid>
-            <Grid item xs={12} style={{ justifyContent: 'left', display: 'flex' }}>
+            <Grid item xs={12} style={{ justifyContent: 'space-between', display: 'flex' }}>
                 <Button variant='contained' color='primary' onClick={() => callFormPage()} style={{ marginLeft: '10px' }}>Criar novo</Button>
+                <Button variant='contained' color="primary" onClick={() => router.push("/livros")} style={{ marginRight: '10px' }}>Livros</Button>
             </Grid>
             <Grid item xs={12} style={{ justifyContent: 'left', display: 'flex' }}>
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell align="center">ID</TableCell>
                             <TableCell align="center">Nome</TableCell>
                             <TableCell align="center">Documento</TableCell>
                             <TableCell align="center">Acoes</TableCell>

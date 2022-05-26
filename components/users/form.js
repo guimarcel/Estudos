@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
-import Paper from '@mui/material/Paper'
 import { TextField } from '@mui/material'
 import { useRouter } from 'next/router'
 import _ from 'lodash'
@@ -14,19 +13,28 @@ function Form() {
     const [name, setName] = useState(_.get(router, 'query.user_name', ''))
     const [doc, setDoc] = useState(_.get(router, 'query.user_doc', ''))
 
-
-
-    const saveChanges = () => {
+    const saveChanges = async () => {
         const body = {
-            user_id: id,
-            user_name: name,
-            user_doc: doc
+            name: name,
+            doc: doc
         }
-        console.log(body)
-        // call route to edit name or create a user
+        if (id) {
+            body._id = id
+        }
+        const url = "http://localhost:8000/users/create-update"
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        })
+        const resp = await response.json()
 
         router.push('/usuarios')
     }
+
     return (
 
         <Grid container spacing={2} style={{ justifyContent: 'center', display: 'flex' }}>

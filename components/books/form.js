@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
-import Paper from '@mui/material/Paper'
 import { TextField } from '@mui/material'
 import { useRouter } from 'next/router'
 import _ from 'lodash'
@@ -13,15 +12,23 @@ function Form() {
     const [id, setId] = useState(_.get(router, 'query.book_id', false))
     const [name, setName] = useState(_.get(router, 'query.book_name', ''))
 
-
-
-    const saveChanges = () => {
+    const saveChanges = async () => {
+        const url = "http://localhost:8000/books/create-update"
         const body = {
-            book_id: id,
-            book_name: name
+            name: name
         }
-        console.log(body)
-        // call route to edit name or create a book
+        if (id) {
+            body._id = id
+        }
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        })
+        const resp = await response.json()
 
         router.push('/livros')
     }
